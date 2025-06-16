@@ -1,108 +1,294 @@
-# Gemini Fullstack LangGraph Quickstart
+# AI Research Agent: LangGraph & PocketFlow Implementations
 
-This project demonstrates a fullstack application using a React frontend and a LangGraph-powered backend agent. The agent is designed to perform comprehensive research on a user's query by dynamically generating search terms, querying the web using Google Search, reflecting on the results to identify knowledge gaps, and iteratively refining its search until it can provide a well-supported answer with citations. This application serves as an example of building research-augmented conversational AI using LangGraph and Google's Gemini models.
+This project demonstrates advanced AI research agents using two different architectures:
+- **Original**: LangGraph + Google Gemini (real-time streaming)
+- **New**: PocketFlow + Ollama (lightweight, self-hosted)
 
-![Gemini Fullstack LangGraph](./app.png)
+Both implementations provide comprehensive research capabilities with dynamic query generation, web research, iterative refinement, and citation-backed answers.
 
-## Features
+![Research Agent Flow](./agent.png)
 
-- 💬 Fullstack application with a React frontend and LangGraph backend.
-- 🧠 Powered by a LangGraph agent for advanced research and conversational AI.
-- 🔍 Dynamic search query generation using Google Gemini models.
-- 🌐 Integrated web research via Google Search API.
-- 🤔 Reflective reasoning to identify knowledge gaps and refine searches.
-- 📄 Generates answers with citations from gathered sources.
-- 🔄 Hot-reloading for both frontend and backend development during development.
+## 🌟 Choose Your Implementation
 
-## Project Structure
+### 🚀 **Recommended: PocketFlow + Ollama** (`backend-new/`)
+- **95% Simpler**: 100-line core vs 37K-line dependency
+- **Zero Cost**: No API fees, runs locally/remote
+- **Privacy First**: All data stays under your control
+- **Zero Vendor Lock-in**: Use any Ollama-compatible models
+- **Easy Development**: Minimal dependencies and complexity
 
-The project is divided into two main directories:
+### 🔬 **Reference: LangGraph + Gemini** (`backend/`)
+- **Production-Proven**: Mature LangGraph ecosystem
+- **Real-time Streaming**: Live research progress updates
+- **Cloud-Ready**: Integrated with LangSmith and Google APIs
+- **Enterprise Features**: Advanced monitoring and deployment
 
--   `frontend/`: Contains the React application built with Vite.
--   `backend/`: Contains the LangGraph/FastAPI application, including the research agent logic.
+## Quick Start
 
-## Getting Started: Development and Local Testing
-
-Follow these steps to get the application running locally for development and testing.
-
-**1. Prerequisites:**
-
--   Node.js and npm (or yarn/pnpm)
--   Python 3.8+
--   **`GEMINI_API_KEY`**: The backend agent requires a Google Gemini API key.
-    1.  Navigate to the `backend/` directory.
-    2.  Create a file named `.env` by copying the `backend/.env.example` file.
-    3.  Open the `.env` file and add your Gemini API key: `GEMINI_API_KEY="YOUR_ACTUAL_API_KEY"`
-
-**2. Install Dependencies:**
-
-**Backend:**
+### Option A: PocketFlow Backend (Recommended)
 
 ```bash
-cd backend
-pip install .
+# 1. Setup environment
+cd backend-new
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 2. Configure Ollama
+cp .env.example .env
+# Edit .env with your Ollama settings
+
+# 3. Install models
+ollama pull phi4              # Query generation
+ollama pull deepseek-r1       # Research & synthesis
+ollama pull llama3.3:70b      # Reflection analysis
+
+# 4. Validate and test
+python validate_setup.py
+python test_new_graph.py
+
+# 5. Start server
+python run_server.py
+# Visit: http://localhost:8000
 ```
 
-**Frontend:**
+### Option B: LangGraph Backend (Legacy)
+
+```bash
+# 1. Setup environment
+cd backend
+pip install .
+
+# 2. Configure Google Gemini
+cp .env.example .env
+# Add your GEMINI_API_KEY
+
+# 3. Start server
+langgraph dev
+# Visit: http://localhost:2024
+```
+
+### Frontend (Both Backends)
 
 ```bash
 cd frontend
 npm install
+npm run dev
+# Visit: http://localhost:5173
 ```
 
-**3. Run Development Servers:**
+## Architecture Comparison
 
-**Backend & Frontend:**
+### PocketFlow Implementation
+```
+User Question → GenerateQueryNode → WebResearchNode → ReflectionNode → FinalizeAnswerNode
+                     (phi4)           (deepseek-r1)      (llama3.3)      (deepseek-r1)
+```
 
+**Key Features:**
+- Simple dictionary-based state management
+- Configurable research depth (1-3+ loops)
+- Dual citation system (cited vs collected sources)
+- Standard REST API communication
+
+### LangGraph Implementation  
+```
+User Question → generate_query → web_research → reflection → finalize_answer
+                   (Gemini)        (Gemini)      (Gemini)      (Gemini)
+```
+
+**Key Features:**
+- TypedDict-based state with reducers
+- Real-time streaming with progress updates
+- Google Search API integration
+- WebSocket communication
+
+## Project Structure
+
+```
+├── frontend/                 # React application (shared)
+├── backend/                  # LangGraph + Gemini (legacy)
+├── backend-new/              # PocketFlow + Ollama (recommended)
+│   ├── src/
+│   │   ├── graph.py          # Main workflow
+│   │   ├── nodes.py          # Prototype implementation
+│   │   └── app.py            # FastAPI server
+│   ├── test_new_graph.py     # End-to-end testing
+│   ├── validate_setup.py     # Setup validation
+│   └── run_server.py         # Development server
+├── CLAUDE.md                 # Development guide
+└── migration-summary.md      # Migration details
+```
+
+## Configuration
+
+### PocketFlow Backend (.env)
 ```bash
-make dev
+# Ollama Configuration
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_QUERY_MODEL=phi4
+OLLAMA_RESEARCH_MODEL=deepseek-r1
+OLLAMA_REFLECTION_MODEL=llama3.3:70b
+OLLAMA_ANSWER_MODEL=deepseek-r1
+
+# Research Settings
+MAX_RESEARCH_LOOPS=2
+NUMBER_OF_INITIAL_QUERIES=3
 ```
-This will run the backend and frontend development servers.    Open your browser and navigate to the frontend development server URL (e.g., `http://localhost:5173/app`).
 
-_Alternatively, you can run the backend and frontend development servers separately. For the backend, open a terminal in the `backend/` directory and run `langgraph dev`. The backend API will be available at `http://127.0.0.1:2024`. It will also open a browser window to the LangGraph UI. For the frontend, open a terminal in the `frontend/` directory and run `npm run dev`. The frontend will be available at `http://localhost:5173`._
+### LangGraph Backend (.env)
+```bash
+GEMINI_API_KEY=your-google-gemini-api-key
+LANGSMITH_API_KEY=your-langsmith-key  # optional
+```
 
-## How the Backend Agent Works (High-Level)
+## How the Research Process Works
 
-The core of the backend is a LangGraph agent defined in `backend/src/agent/graph.py`. It follows these steps:
+Both implementations follow the same core research methodology:
 
-![Agent Flow](./agent.png)
+1. **Query Generation**: Analyze user question and generate 1-3 optimized search queries
+2. **Web Research**: Perform parallel web searches and synthesize findings
+3. **Reflection**: Analyze research sufficiency and identify knowledge gaps
+4. **Iterative Refinement**: Generate follow-up queries if needed (up to max loops)
+5. **Answer Synthesis**: Create comprehensive answer with proper citations
 
-1.  **Generate Initial Queries:** Based on your input, it generates a set of initial search queries using a Gemini model.
-2.  **Web Research:** For each query, it uses the Gemini model with the Google Search API to find relevant web pages.
-3.  **Reflection & Knowledge Gap Analysis:** The agent analyzes the search results to determine if the information is sufficient or if there are knowledge gaps. It uses a Gemini model for this reflection process.
-4.  **Iterative Refinement:** If gaps are found or the information is insufficient, it generates follow-up queries and repeats the web research and reflection steps (up to a configured maximum number of loops).
-5.  **Finalize Answer:** Once the research is deemed sufficient, the agent synthesizes the gathered information into a coherent answer, including citations from the web sources, using a Gemini model.
+### Research Loop Example
+```
+Question: "What are the latest quantum computing developments in 2024?"
 
-## Deployment
+Loop 1: ["quantum computing 2024", "quantum breakthroughs 2024"]
+→ Reflection: Need more specific company/technical details
+Loop 2: ["IBM quantum roadmap 2024", "Google quantum chip 2024"]  
+→ Reflection: Sufficient information gathered
+Final: Comprehensive answer with 15+ citations
+```
 
-In production, the backend server serves the optimized static frontend build. LangGraph requires a Redis instance and a Postgres database. Redis is used as a pub-sub broker to enable streaming real time output from background runs. Postgres is used to store assistants, threads, runs, persist thread state and long term memory, and to manage the state of the background task queue with 'exactly once' semantics. For more details on how to deploy the backend server, take a look at the [LangGraph Documentation](https://langchain-ai.github.io/langgraph/concepts/deployment_options/). Below is an example of how to build a Docker image that includes the optimized frontend build and the backend server and run it via `docker-compose`.
+## API Usage
 
-_Note: For the docker-compose.yml example you need a LangSmith API key, you can get one from [LangSmith](https://smith.langchain.com/settings)._
+### PocketFlow API
+```bash
+curl -X POST "http://localhost:8000/api/research" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Latest AI developments in 2024",
+    "context": "Focus on breakthrough models"
+  }'
+```
 
-_Note: If you are not running the docker-compose.yml example or exposing the backend server to the public internet, you update the `apiUrl` in the `frontend/src/App.tsx` file your host. Currently the `apiUrl` is set to `http://localhost:8123` for docker-compose or `http://localhost:2024` for development._
+### LangGraph API
+```bash
+# Streaming endpoint (requires LangGraph SDK)
+POST http://localhost:2024/threads/{thread_id}/runs
+```
 
-**1. Build the Docker Image:**
+## Testing & Development
 
-   Run the following command from the **project root directory**:
-   ```bash
-   docker build -t gemini-fullstack-langgraph -f Dockerfile .
-   ```
-**2. Run the Production Server:**
+### PocketFlow Testing
+```bash
+cd backend-new
 
-   ```bash
-   GEMINI_API_KEY=<your_gemini_api_key> LANGSMITH_API_KEY=<your_langsmith_api_key> docker-compose up
-   ```
+# Validate setup
+python validate_setup.py
 
-Open your browser and navigate to `http://localhost:8123/app/` to see the application. The API will be available at `http://localhost:8123`.
+# Mock testing (no LLM)
+python test_flow_mock.py
+
+# Full testing
+python test_new_graph.py
+
+# Prototype testing
+python test_agent.py
+```
+
+### LangGraph Testing
+```bash
+cd backend
+
+# Unit tests
+make test
+
+# Development server
+langgraph dev
+```
+
+## Performance & Resources
+
+### PocketFlow Requirements
+- **RAM**: 8GB+ (7B models), 16GB+ (13B models)
+- **Storage**: 5-20GB per model
+- **Network**: DuckDuckGo API access
+- **Cost**: Free (local models)
+
+### LangGraph Requirements
+- **API Keys**: Google Gemini API
+- **Network**: Google Search API access
+- **Infrastructure**: Redis + Postgres (production)
+- **Cost**: Pay-per-API-call
+
+## Migration Guide
+
+### From LangGraph to PocketFlow
+1. Review `migration-summary.md` for detailed comparison
+2. Set up Ollama with recommended models
+3. Test functionality with `backend-new/test_new_graph.py`
+4. Update frontend API endpoints if needed
+
+### Key Differences
+| Feature | LangGraph | PocketFlow |
+|---------|-----------|------------|
+| **Complexity** | 37K+ lines | 100 lines core |
+| **Dependencies** | 20+ packages | 8 packages |
+| **Streaming** | ✅ Real-time | ❌ Standard HTTP |
+| **Cost** | 💰 API fees | 🆓 Free |
+| **Privacy** | ☁️ Cloud | 🔒 Local |
+| **Setup** | Complex | Simple |
 
 ## Technologies Used
 
-- [React](https://reactjs.org/) (with [Vite](https://vitejs.dev/)) - For the frontend user interface.
-- [Tailwind CSS](https://tailwindcss.com/) - For styling.
-- [Shadcn UI](https://ui.shadcn.com/) - For components.
-- [LangGraph](https://github.com/langchain-ai/langgraph) - For building the backend research agent.
-- [Google Gemini](https://ai.google.dev/models/gemini) - LLM for query generation, reflection, and answer synthesis.
+### Core Technologies
+- **Frontend**: React + Vite + TailwindCSS + Shadcn/ui
+- **Search**: DuckDuckGo Search API
+- **Citation**: Automatic URL processing and citation management
+
+### Backend Options
+- **PocketFlow**: Minimalist workflow framework + Ollama models
+- **LangGraph**: Advanced graph framework + Google Gemini models
+
+## Development
+
+### Starting New Features
+1. **Use PocketFlow** (`backend-new/`) for new development
+2. Follow patterns in `backend-new/src/graph.py`
+3. Test with validation scripts
+4. See `CLAUDE.md` for detailed development guidance
+
+### Contributing
+1. Choose appropriate backend for your use case
+2. Follow established code patterns
+3. Add tests for new functionality
+4. Update relevant documentation
+
+## Deployment
+
+### PocketFlow Deployment
+```bash
+# Local development
+python backend-new/run_server.py
+
+# Production (Docker)
+docker build -t research-agent -f backend-new/Dockerfile .
+docker run -p 8000:8000 research-agent
+```
+
+### LangGraph Deployment
+```bash
+# Development
+make dev
+
+# Production
+GEMINI_API_KEY=xxx LANGSMITH_API_KEY=xxx docker-compose up
+```
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
